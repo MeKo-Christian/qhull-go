@@ -1,13 +1,8 @@
-// Package qhull computes 2-D Delaunay triangulations, aiming to reproduce the
-// connectivity that matplotlib's Qhull backend (qhull 8.0.2, options
-// "d Qt Qbb Qc Qz") produces. For points in general position the Delaunay
-// triangulation is unique, so any correct construction matches Qhull; the
-// engine's additional job is to match Qhull's diagonal choice on cocircular
-// inputs, where the triangulation is non-unique.
-//
-// This file holds a robust baseline construction (exact-predicate incremental
-// insertion). Qhull-faithful cocircular tie-breaking is built on top of it.
 package qhull
+
+// This file holds the robust baseline construction (exact-predicate incremental
+// insertion). Qhull-faithful cocircular tie-breaking is built on top of it; the
+// package overview lives in doc.go.
 
 import (
 	"fmt"

@@ -55,14 +55,22 @@ Before tagging `v0.1.0`:
 - [x] **Public naming decided.** The Qhull-faithful path is the default `Delaunay`;
       the raw exact-predicate baseline is `DelaunayFast`. (In matplotlib-go the
       matched variant is what callers want, so it is the default.)
-- [ ] **Add `doc.go`** with a package overview + runnable example.
-- [ ] Consider a small result type (`type Triangulation struct{ Triangles, Neighbors [][3]int }`)
-      vs. the current multi-return — multi-return matches the matplotlib-go call
-      sites today; keep it unless we want a richer surface.
-- [ ] Decide whether to expose anything else the port already computes internally
-      (convex hull, the vertex creation order, Voronoi dual). Out of scope for
-      v0.1.0 unless there's demand.
-- [ ] Run an API audit / `go doc` review; freeze for v0.1.0 and tag.
+- [x] **Add `doc.go`** with a package overview (`doc.go`) + runnable, verified
+      example (`ExampleDelaunay` in `example_test.go`, with `// Output:`). The
+      package comment was consolidated into `doc.go` (removed from `delaunay.go`)
+      so `go doc` shows a single clean overview.
+- [x] **Result type decided: keep the multi-return.** No `Triangulation` struct —
+      `(triangles, neighbors, err)` matches the matplotlib-go call sites and keeps
+      the surface minimal. Revisit only if a richer surface is wanted.
+- [x] **Extra exposure decided: nothing else for v0.1.0.** Convex hull, vertex
+      creation order, and the Voronoi dual stay internal — out of scope unless
+      there's demand.
+- [x] **API audit / `go doc` review done.** Exported surface is exactly
+      `Delaunay` + `DelaunayFast`; `go doc`, `go vet`, `gofmt`, and the full test
+      suite (incl. the example) are green.
+- [ ] **Freeze + tag `v0.1.0`.** Deferred: Go's module proxy caches tags
+      immutably, so hold the tag until §3 (grid5x4) and §5 (CI) are settled or
+      until a v0.1.0 release is explicitly wanted. The API itself is frozen.
 
 ## 3. Finish the algorithm — grid5x4 (the 60/61 holdout)
 
