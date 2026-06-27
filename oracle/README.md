@@ -18,7 +18,7 @@ This directory holds only our own code:
 
 ## Pristine source pin
 
-```
+```text
 version : qhull_r 8.0.2 (2020.2.r 2020/08/31)
 tarball : https://github.com/qhull/qhull/archive/refs/tags/v8.0.2.tar.gz
 sha256  : 8774e9a12c70b0180b95d6b0b563c5aa4bea8d5960c15e18ae3b6d2521d64f8b
@@ -64,7 +64,7 @@ The instrumentation is gated by env vars. Set one and run a tool:
 | Env var | Effect |
 | --- | --- |
 | `QHATTACH` | Per-cone `REPL` / `CONE` / `MERGEFACET` trace from `qh_makenewfacets` & `qh_mergefacet` — the merge/replacement decisions. |
-| `QHSTEP`   | Per-pick facet list with vertices + outside sets in `qh_buildhull` (the **real** merging build). |
+| `QHSTEP` | Per-pick facet list with vertices + outside sets in `qh_buildhull` (the **real** merging build). |
 
 Example — dump the real per-step state of the grid5x4 build:
 

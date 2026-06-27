@@ -127,15 +127,27 @@ The oracle is the real test harness — it captures Qhull's creation order
 - [ ] Optional: codecov / coverage badge. (`just test-coverage` produces the
       profile; wiring a badge/upload is deferred.)
 
-## 6. Tests & quality
+## 6. Tests & quality — DONE
 
-- [ ] Sanity-review test names now that the package is at the module root (some
-      docstrings reference `third_party/qhull-8.0.2/...` paths — still valid since
-      the oracle moved with the same relative layout; confirm after any reshuffle).
-- [ ] Consider promoting the corpus comparators (`TestDelaunayConnectivityVsQhull`,
-      `TestComputedOrderRidge`) to the documented gates.
-- [ ] Add a couple of plain usage tests / examples that don't depend on the corpus,
-      so the public API has standalone coverage.
+- [x] Sanity-reviewed test docstrings after the oracle moved to `oracle/`: the one
+      stale path (`build_test.go`'s `third_party/qhull-8.0.2/{dump_state,introspect}.c`)
+      now points at `oracle/{dump_state,introspect}.c`. The other oracle references
+      live in `oracle/README.md` and the gen scripts.
+- [x] **Promoted the parity comparator to a hard gate.** Added
+      `TestDelaunayMatchesQhullCorpus` (`corpus_test.go`): the public, default
+      `Delaunay` must reproduce Qhull's exact connectivity — cocircular diagonal
+      included — for **every** corpus case (general 27/27 and cocircular 34/34, both
+      hard gates now that the build-order port is complete).
+      `TestComputedOrderRidge`/`TestDelaunayComputed` already hard-gate general and
+      ratchet cocircular at 34 (= the full target); `TestDelaunayConnectivityVsQhull`
+      stays a low ratchet because it gates `DelaunayFast`, which intentionally does
+      not match the cocircular diagonal.
+- [x] Added corpus-independent public-API tests (`usage_test.go`, external
+      `qhull_test` package): single triangle, cocircular square, general-position
+      `Delaunay`/`DelaunayFast` agreement, determinism across calls, error paths
+      (length mismatch, <3 points, empty, collinear), plus reusable structural
+      invariant checks (anticlockwise winding, every point used, neighbour-graph
+      symmetry and shared-edge correspondence).
 
 ## 7. Cutover in matplotlib-go (do LAST — currently intentionally NOT done)
 

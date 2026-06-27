@@ -178,3 +178,49 @@ func TestDelaunayConnectivityVsQhull(t *testing.T) {
 		}
 	}
 }
+
+// TestDelaunayMatchesQhullCorpus is the parity gate for the public, default
+// entry point (Delaunay): for every corpus case it must reproduce Qhull's exact
+// connectivity — including the cocircular diagonal, which DelaunayFast does not.
+// Both categories are HARD gates (general 27/27, cocircular 34/34): the faithful
+// build-order port is complete, so any miss is a regression in the parity promise,
+// not an in-progress gap. Compared as sets/graphs, independent of Qhull's internal
+// array order and per-row vertex rotation.
+func TestDelaunayMatchesQhullCorpus(t *testing.T) {
+	c := loadCorpus(t)
+	byCat := map[string]*struct {
+		pass, total int
+		fails       []string
+	}{}
+	for _, tc := range c.Cases {
+		st := byCat[tc.Category]
+		if st == nil {
+			st = &struct {
+				pass, total int
+				fails       []string
+			}{}
+			byCat[tc.Category] = st
+		}
+		st.total++
+		got, nbr, err := Delaunay(tc.X, tc.Y)
+		if err == nil &&
+			len(got) == len(tc.Triangles) &&
+			sameTriangleSet(got, tc.Triangles) &&
+			sameNeighborGraph(got, nbr, tc.Triangles, tc.Neighbors) {
+			st.pass++
+		} else {
+			st.fails = append(st.fails, tc.Name)
+		}
+	}
+	for _, cat := range []string{"general", "cocircular"} {
+		st := byCat[cat]
+		if st == nil {
+			continue
+		}
+		t.Logf("category %-10s: %d/%d match", cat, st.pass, st.total)
+		if st.pass != st.total {
+			t.Errorf("Delaunay must reproduce Qhull connectivity for every %s case: %d/%d (failing: %v)",
+				cat, st.pass, st.total, st.fails)
+		}
+	}
+}
