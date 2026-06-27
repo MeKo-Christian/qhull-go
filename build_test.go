@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// Ground truth captured from the vendored Qhull 8.0.2 via the introspection
+// Ground truth captured from the local Qhull 8.0.2 oracle via the introspection
 // tools (third_party/qhull-8.0.2/{dump_state,introspect}.c): projected/scaled
 // coordinates, tolerances, and the initial-simplex append order (= first vertex
 // ids = start of the point creation order).

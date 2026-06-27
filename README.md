@@ -43,14 +43,18 @@ to `(j+1)%3`, or `-1` on the convex-hull boundary.
 
 ## Ground-truth oracle
 
-`third_party/qhull-8.0.2/` holds the vendored Qhull source (porting reference)
-plus small instrumentation tools (`introspect.c`, `dump_state.c`, `stepdump.c`)
-used to capture Qhull's creation order and per-step merge trace as test fixtures
-(`testdata/creation_order.json`, `testdata/corpus.json`). See `PLAN.md` for the
-build recipe and vendoring plan.
+Parity is validated against Qhull's actual output, captured as fixtures in
+`testdata/` (`creation_order.json`, `corpus.json`). The fixtures are committed, so
+building and testing this package needs nothing beyond the Go toolchain.
+
+Regenerating the fixtures requires the Qhull 8.0.2 source plus the small
+instrumentation tools (`introspect.c`, `dump_state.c`, `stepdump.c`). That source
+is **not redistributed here** — it is a local, gitignored dev dependency under
+`third_party/qhull-8.0.2/`. Obtain Qhull from <http://www.qhull.org>; see
+`THIRD_PARTY.md` and `PLAN.md` for the layout and build recipe.
 
 ## License
 
-The Go code is MIT-licensed (see `LICENSE`). The vendored Qhull source under
-`third_party/qhull-8.0.2/` retains its original Qhull license
-(`third_party/qhull-8.0.2/COPYING.txt`). See `THIRD_PARTY.md` for the full split.
+All code published here is MIT-licensed (see `LICENSE`). Qhull is used only as a
+local dev/test oracle and is **not redistributed** in this repository; see
+`THIRD_PARTY.md`.

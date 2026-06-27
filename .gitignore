@@ -1,14 +1,11 @@
-# Compiled oracle binaries (rebuilt via the build recipe in PLAN.md / gen scripts)
-/third_party/qhull-8.0.2/dump_state
-/third_party/qhull-8.0.2/introspect
-/third_party/qhull-8.0.2/stepdump
+# Vendored Qhull oracle — used locally only (fixture regeneration), never
+# redistributed in this repo. Obtain Qhull 8.0.2 source separately; see
+# THIRD_PARTY.md / PLAN.md for the layout and build recipe.
+/third_party/
 
-# C object files / build artifacts from building the oracle
+# C object files / build artifacts
 *.o
 *.a
-third_party/qhull-8.0.2/build/Debug/
-third_party/qhull-8.0.2/build/Release/
-third_party/qhull-8.0.2/build/CMakeFiles/
 
 # Go build / test artifacts
 *.test

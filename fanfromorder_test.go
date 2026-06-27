@@ -8,7 +8,7 @@ import (
 )
 
 // creationOrders is the ground-truth vertex creation order captured from the
-// vendored Qhull 8.0.2 via the introspect tool (testdata/gen_creation_order.py):
+// local Qhull 8.0.2 oracle via the introspect tool (testdata/gen_creation_order.py):
 // order[name][k] is the input point id that Qhull created k-th.
 type creationOrders struct {
 	QhullVersion string           `json:"qhull_version"`

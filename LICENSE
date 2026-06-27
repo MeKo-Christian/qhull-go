@@ -22,6 +22,7 @@ SOFTWARE.
 
 ---
 
-This repository vendors the Qhull 8.0.2 source under third_party/qhull-8.0.2/
-as a porting reference and test oracle. That code is governed by its own
-license; see third_party/qhull-8.0.2/COPYING.txt.
+This repository does not redistribute any Qhull source. Qhull 8.0.2 is used
+only as a local, gitignored dev/test oracle (under third_party/, obtained
+separately from http://www.qhull.org) and retains its own license. See
+THIRD_PARTY.md.

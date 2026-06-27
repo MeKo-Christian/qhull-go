@@ -1,31 +1,26 @@
 # Third-party licenses
 
-This repository combines code under two different licenses.
+## qhull-go (this repository) — MIT
 
-## qhull-go (the Go package) — MIT
+Everything published in this repository is original work licensed under the MIT
+License (see [`LICENSE`](LICENSE)). The importable Go package has **no external
+dependencies and no cgo** — standard library only.
 
-All Go source at the module root (`package qhull`) is original work, licensed
-under the MIT License. See [`LICENSE`](LICENSE).
+## Qhull — local-only dev/test oracle, not redistributed here
 
-## Vendored Qhull 8.0.2 — Qhull license
+This package was built to reproduce the exact connectivity of
+[Qhull](http://www.qhull.org) 8.0.2. Qhull's source is used **locally** as a
+porting reference and as the ground-truth oracle that regenerates the test
+fixtures in `testdata/` (creation order and per-step merge trace).
 
-`third_party/qhull-8.0.2/` is a vendored copy of [Qhull](http://www.qhull.org)
-8.0.2 (Copyright © 1993–2020 C.B. Barber and The Geometry Center, University of
-Minnesota). It is included as a porting reference and as the ground-truth test
-oracle. It is **not** compiled into the importable Go package and carries no cgo
-dependency for consumers.
+That Qhull source is **not vendored or redistributed in this repository** — the
+`third_party/` directory is gitignored. To regenerate fixtures, obtain Qhull
+8.0.2 separately from <http://www.qhull.org> and place it under
+`third_party/qhull-8.0.2/`; see `PLAN.md` for the expected layout, the
+instrumentation harnesses (`introspect.c`, `dump_state.c`, `stepdump.c`,
+`order.py`), and the build recipe. Qhull retains its own license (a permissive
+license from C.B. Barber and The Geometry Center) — consult the `COPYING.txt`
+shipped with the Qhull source you download.
 
-This vendored tree is governed by its own permissive license, not by the MIT
-license above. See [`third_party/qhull-8.0.2/COPYING.txt`](third_party/qhull-8.0.2/COPYING.txt)
-for the full terms (the key conditions are that copyright notices remain intact
-and that the origin of the software is not misrepresented).
-
-### Instrumentation harnesses
-
-The files `introspect.c`, `dump_state.c`, `stepdump.c`, and `order.py` under
-`third_party/qhull-8.0.2/` were added by this project. They build and link
-against the vendored Qhull library to capture Qhull's vertex creation order and
-per-step merge trace as test fixtures (`testdata/creation_order.json`,
-`testdata/corpus.json`). As derivative tooling distributed alongside Qhull, they
-are made available under the same Qhull license terms. They are development-only
-and are not part of the importable Go package.
+Because the Qhull source is not part of this repository, running `go build`,
+`go test`, and `go get` against qhull-go never touches it.

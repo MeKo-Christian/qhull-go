@@ -16,9 +16,9 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done.
 - [x] Create repo at `../qhull-go`, `git init`.
 - [x] Copy all `tri/qhull/*.go` to the module root (package `qhull`).
 - [x] Copy `testdata/` (corpus.json, creation_order.json, gen_*.py).
-- [x] Copy the ground-truth oracle to `third_party/qhull-8.0.2/` (patched Qhull
-      source + `introspect.c` / `dump_state.c` / `stepdump.c` / `order.py`),
-      minus compiled binaries.
+- [x] Keep the ground-truth oracle at `third_party/qhull-8.0.2/` (patched Qhull
+      source + `introspect.c` / `dump_state.c` / `stepdump.c` / `order.py`) as a
+      **local, gitignored** dev dependency — not redistributed in this repo.
 - [x] `go.mod` → `module github.com/MeKo-Christian/qhull-go`, `go 1.25.0`.
 - [x] `.gitignore`, `README.md`, this `PLAN.md`.
 - [x] Verify standalone: `go build ./...`, `go vet ./...`, `go test ./...` all green.
@@ -28,16 +28,18 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done.
 ## 1. Repo / publishing setup
 
 - [x] **Create the GitHub repo** `MeKo-Christian/qhull-go` and push the initial commit.
-- [x] **Add a `LICENSE`** — MIT, for the Go code. The vendored Qhull source under
-      `third_party/qhull-8.0.2/` keeps its own license (`COPYING.txt`).
-- [x] Add a short `THIRD_PARTY.md` spelling out the license split (MIT Go code vs.
-      Qhull-licensed vendored C source, incl. the added instrumentation harnesses).
+- [x] **Add a `LICENSE`** — MIT, for the Go code. The Qhull oracle is not
+      redistributed here (see vendoring decision below), so the published repo is
+      MIT-only.
+- [x] Add a short `THIRD_PARTY.md` clarifying that the published repo is MIT-only
+      and that Qhull is a local, gitignored dev/test oracle (not redistributed).
 - [x] **Confirm the module path.** `github.com/MeKo-Christian/qhull-go` (the package
       name stays `qhull`; consumers import the repo path and refer to it as `qhull`).
       `go.mod` + README + LICENSE copyright updated to match.
-- [x] **Vendoring decision:** the Qhull `src/` tree stays committed wholesale (it
-      preserves the instrumentation patches). A submodule/wrap-file + patch set is
-      deferred to §4.
+- [x] **Vendoring decision:** do **not** redistribute Qhull. `third_party/` is
+      gitignored and used only locally for fixture regeneration; the source was
+      purged from git history to avoid any licensing entanglement. The build
+      recipe (§4) documents how to obtain Qhull 8.0.2 and rebuild the oracle.
 
 ## 2. Public API design & freeze
 
@@ -94,12 +96,15 @@ The oracle is the real test harness — it captures Qhull's creation order
       third_party/qhull-8.0.2/src/libqhull_r/*.c -lm -o bin/introspect`
       (and likewise `dump_state`, `stepdump`). Mirror the recipe documented in
       `testdata/gen_creation_order.py`.
-- [ ] **Document the instrumentation patches** applied to the vendored
-      `src/libqhull_r/*.c` (QHATTACH / QHSTEP trace printfs) — either keep the
-      patched source committed (current) or record them as a standalone `.patch`
-      against a pristine Qhull 8.0.2 tarball + a `.wrap`-style pin (mirroring how
-      matplotlib pins FreeType 2.6.1). The pristine source + sha should be pinned
-      so the oracle is reproducible.
+- [ ] **Capture the instrumentation patches** applied to the local
+      `src/libqhull_r/*.c` (QHATTACH / QHSTEP trace printfs) as a standalone
+      `.patch` against a pristine Qhull 8.0.2 tarball + a `.wrap`-style pin
+      (mirroring how matplotlib pins FreeType 2.6.1), with the pristine source +
+      sha pinned so the oracle is reproducible. **Note:** the full Qhull source is
+      no longer committed (it was gitignored and purged from history for licensing
+      reasons), so these patches currently exist **only on local disk** — a small
+      own-authored `.patch` is the supported way to preserve and version them
+      without redistributing Qhull itself.
 - [ ] **Document fixture regeneration**: `QHULL_INTROSPECT=bin/introspect python3
       testdata/gen_creation_order.py`, and the corpus via `testdata/gen_corpus.py`.
 - [ ] Note the buffering gotcha in docs (libqhull trace printfs are block-buffered;
