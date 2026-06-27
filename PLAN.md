@@ -120,13 +120,21 @@ The oracle is the real test harness — it captures Qhull's creation order
 
 ## 5. CI & tooling
 
-- [ ] **GitHub Actions**: `go test ./...`, `go vet ./...`, `gofmt`/`gofumpt` check,
-      `golangci-lint run`. No cgo and no system deps needed for the Go tests
-      (the oracle is only for fixture regeneration, not CI), so CI is simple.
-- [ ] Add a `justfile` (build / test / lint / fmt / oracle-build) consistent with
-      the MeKo conventions.
-- [ ] Add `golangci-lint` config; clear any lints the relocation surfaced.
-- [ ] Optional: codecov / coverage badge.
+- [x] **GitHub Actions** (modular `workflow_call` layout, mirroring the MeKo
+      `algo-dsp` convention): `.github/workflows/ci.yml` orchestrates
+      `test-unit.yml` (matrix Go 1.24.x/1.25.x: `go mod verify`, `go vet`,
+      `go test`), `test-lint.yml` (`golangci-lint-action@v8`, pinned v2.12.2), and
+      `test-format.yml` (gofumpt via `golangci-lint fmt` + `git diff --exit-code`).
+      No cgo / no system deps — the oracle is only for fixture regeneration.
+- [x] Add a `justfile` (build / test / test-race / test-coverage / bench / vet /
+      lint / lint-fix / fmt / check-formatted / check-tidy / ci / oracle-build /
+      clean / fix), consistent with the MeKo conventions; self-contained on
+      `golangci-lint` for both lint and format (no treefmt dependency).
+- [x] Add `golangci-lint` config (`.golangci.yml`, v2: standard set + misspell,
+      gocritic, revive; gofumpt formatter). Cleared the one surfaced lint
+      (unchecked `os.Stderr.WriteString` in the debug trace). `just ci` is green.
+- [ ] Optional: codecov / coverage badge. (`just test-coverage` produces the
+      profile; wiring a badge/upload is deferred.)
 
 ## 6. Tests & quality
 

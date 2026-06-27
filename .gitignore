@@ -11,6 +11,8 @@
 *.test
 *.out
 /coverage.txt
+/coverage.html
+/bin/
 
 # Editor/OS noise
 .DS_Store

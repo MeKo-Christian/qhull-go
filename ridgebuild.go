@@ -1179,7 +1179,7 @@ func (h *rhull) traceStep(furthest int, seed *rfacet) {
 		}
 		b.WriteString("]\n")
 	}
-	os.Stderr.WriteString(b.String())
+	_, _ = os.Stderr.WriteString(b.String())
 }
 
 func itoa(n int) string {

@@ -1,5 +1,9 @@
 # qhull-go
 
+[![CI](https://github.com/MeKo-Christian/qhull-go/actions/workflows/ci.yml/badge.svg)](https://github.com/MeKo-Christian/qhull-go/actions/workflows/ci.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/MeKo-Christian/qhull-go.svg)](https://pkg.go.dev/github.com/MeKo-Christian/qhull-go)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A pure-Go 2-D Delaunay triangulator that aims to reproduce the **exact
 connectivity** produced by [Qhull](http://www.qhull.org) 8.0.2 with matplotlib's
 options (`qhull d Qt Qbb Qc Qz`).

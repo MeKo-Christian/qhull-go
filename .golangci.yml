@@ -1,0 +1,34 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  default: standard
+  enable:
+    - misspell
+    - gocritic
+    - revive
+  settings:
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - style
+        - performance
+      disabled-checks:
+        - commentedOutCode
+        - unnamedResult
+    revive:
+      rules:
+        - name: file-length-limit
+          arguments:
+            - max: 1500
+              skip-comments: false
+              skip-blank-lines: false
+  exclusions:
+    generated: strict
+
+formatters:
+  enable:
+    - gofumpt

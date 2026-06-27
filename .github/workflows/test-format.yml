@@ -1,0 +1,28 @@
+name: Format Check
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    name: gofumpt
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.x"
+
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+
+      - name: Check formatting (gofumpt via golangci-lint)
+        run: |
+          golangci-lint fmt
+          git diff --exit-code
