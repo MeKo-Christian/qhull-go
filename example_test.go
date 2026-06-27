@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	qhull "github.com/MeKo-Christian/qhull-go"
+	qhull "github.com/cwbudde/qhull-go"
 )
 
 // ExampleDelaunay triangulates the four corners of a unit square. The corners are

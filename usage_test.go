@@ -3,7 +3,7 @@ package qhull_test
 import (
 	"testing"
 
-	qhull "github.com/MeKo-Christian/qhull-go"
+	qhull "github.com/cwbudde/qhull-go"
 )
 
 // This file exercises the public API (Delaunay, DelaunayFast) directly, without

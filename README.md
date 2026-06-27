@@ -1,7 +1,7 @@
 # qhull-go
 
-[![CI](https://github.com/MeKo-Christian/qhull-go/actions/workflows/ci.yml/badge.svg)](https://github.com/MeKo-Christian/qhull-go/actions/workflows/ci.yml)
-[![Go Reference](https://pkg.go.dev/badge/github.com/MeKo-Christian/qhull-go.svg)](https://pkg.go.dev/github.com/MeKo-Christian/qhull-go)
+[![CI](https://github.com/cwbudde/qhull-go/actions/workflows/ci.yml/badge.svg)](https://github.com/cwbudde/qhull-go/actions/workflows/ci.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/cwbudde/qhull-go.svg)](https://pkg.go.dev/github.com/cwbudde/qhull-go)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 A pure-Go 2-D Delaunay triangulator that aims to reproduce the **exact
@@ -21,7 +21,7 @@ No cgo. No external dependencies — standard library only.
 ## API
 
 ```go
-import qhull "github.com/MeKo-Christian/qhull-go"
+import qhull "github.com/cwbudde/qhull-go"
 
 // Default: matplotlib/Qhull-matched connectivity, with the cocircular diagonal
 // resolved from the computed vertex creation order. This is what you want for

@@ -13,13 +13,13 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done.
 
 ## 1. Repo / publishing setup
 
-- [x] **Create the GitHub repo** `MeKo-Christian/qhull-go` and push the initial commit.
+- [x] **Create the GitHub repo** `cwbudde/qhull-go` and push the initial commit.
 - [x] **Add a `LICENSE`** — MIT, for the Go code. The Qhull oracle is not
       redistributed here (see vendoring decision below), so the published repo is
       MIT-only.
 - [x] Add a short `THIRD_PARTY.md` clarifying that the published repo is MIT-only
       and that Qhull is a local, gitignored dev/test oracle (not redistributed).
-- [x] **Confirm the module path.** `github.com/MeKo-Christian/qhull-go` (the package
+- [x] **Confirm the module path.** `github.com/cwbudde/qhull-go` (the package
       name stays `qhull`; consumers import the repo path and refer to it as `qhull`).
       `go.mod` + README + LICENSE copyright updated to match.
 - [x] **Vendoring decision:** do **not** redistribute Qhull. `third_party/` is
@@ -153,7 +153,7 @@ The oracle is the real test harness — it captures Qhull's creation order
 
 Once §1–§5 are stable and a version is tagged:
 
-- [ ] Add `require github.com/MeKo-Christian/qhull-go vX.Y.Z` to matplotlib-go's
+- [ ] Add `require github.com/cwbudde/qhull-go vX.Y.Z` to matplotlib-go's
       `go.mod` (use a `replace => ../qhull-go` during local development).
 - [ ] Repoint the two consumers — `tri/delaunay.go` and `tri/triangulation.go` —
       from the in-tree `tri/qhull` to the external module.
