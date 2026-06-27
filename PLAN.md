@@ -84,30 +84,30 @@ across the combined order lock). `grid5x4` is closed.
       `buildhull_test.go` (`computedCocircularRatchet`) to 34, and dropped the
       holdout notes from the README.
 
-## 4. Ground-truth oracle: vendoring & build recipe
+## 4. Ground-truth oracle: vendoring & build recipe — DONE
 
 The oracle is the real test harness — it captures Qhull's creation order
 (`introspect`), projected state (`dump_state`), and per-step merge trace
-(`stepdump`, gated on `QHATTACH`/`QHSTEP`) as fixtures.
+(`stepdump`, gated on `QHATTACH`/`QHSTEP`) as fixtures. All of this now lives in
+`oracle/` (own code only; Qhull is not redistributed).
 
-- [ ] **Add a build target** (`justfile`) for the tools, e.g.
-      `cc -O2 -I third_party/qhull-8.0.2/src third_party/qhull-8.0.2/introspect.c \
-      third_party/qhull-8.0.2/src/libqhull_r/*.c -lm -o bin/introspect`
-      (and likewise `dump_state`, `stepdump`). Mirror the recipe documented in
-      `testdata/gen_creation_order.py`.
-- [ ] **Capture the instrumentation patches** applied to the local
-      `src/libqhull_r/*.c` (QHATTACH / QHSTEP trace printfs) as a standalone
-      `.patch` against a pristine Qhull 8.0.2 tarball + a `.wrap`-style pin
-      (mirroring how matplotlib pins FreeType 2.6.1), with the pristine source +
-      sha pinned so the oracle is reproducible. **Note:** the full Qhull source is
-      no longer committed (it was gitignored and purged from history for licensing
-      reasons), so these patches currently exist **only on local disk** — a small
-      own-authored `.patch` is the supported way to preserve and version them
-      without redistributing Qhull itself.
-- [ ] **Document fixture regeneration**: `QHULL_INTROSPECT=bin/introspect python3
-      testdata/gen_creation_order.py`, and the corpus via `testdata/gen_corpus.py`.
-- [ ] Note the buffering gotcha in docs (libqhull trace printfs are block-buffered;
-      capture to a file, not `head`).
+- [x] **Build target** (`justfile`): `just oracle-build` compiles `oracle/*.c`
+      against the local `third_party/qhull-8.0.2/src/libqhull_r/*.c` into `bin/`.
+- [x] **Captured the instrumentation patches** as `oracle/instrumentation.patch`
+      (the `QHATTACH`/`QHSTEP` trace `printf`s — our own added lines only, no Qhull
+      source) plus a pin (tarball URL + sha256 + version) in `oracle/README.md`.
+      Verified by round-trip: download pristine `v8.0.2` → apply patch → build →
+      regenerate `grid5x4`'s creation order → matches the committed fixture exactly.
+      The three tool sources (`introspect.c`, `dump_state.c`, `stepdump.c`) are now
+      versioned under `oracle/` instead of only on local disk.
+- [x] **Documented fixture regeneration** in `oracle/README.md` (and updated the
+      header of `testdata/gen_creation_order.py`): `just oracle-build` then
+      `QHULL_INTROSPECT=bin/introspect python3 testdata/gen_creation_order.py`.
+- [x] **Documented the gotchas** in `oracle/README.md`: the block-buffering note
+      (capture full output to a file, don't truncate with `head`) **and** the
+      bigger trap discovered closing grid5x4 — `stepdump`'s `TA<n>` stop option
+      *suppresses merging*, so use `introspect` + `QHSTEP=1` for the real merging
+      per-step trace.
 
 ## 5. CI & tooling
 

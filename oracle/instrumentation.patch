@@ -1,0 +1,162 @@
+--- a/src/libqhull_r/libqhull_r.c
++++ b/src/libqhull_r/libqhull_r.c
+@@ -617,6 +617,30 @@
+   }
+   qh->facet_next= qh->facet_list;      /* advance facet when processed */
+   while ((furthest= qh_nextfurthest(qh, &facet))) {
++    if (getenv("QHSTEP")) {
++      static int qhstep= 0;
++      facetT *savefacet= facet;
++      vertexT *vertex, **vertexp; pointT *point, **pointp;
++      printf("STEP %d pick p%d from f%d (facet_next=f%d) maxout=%.5g DISTout=%.5g\n",
++        qhstep++, qh_pointid(qh, furthest), getid_(savefacet), getid_(qh->facet_next),
++        qh->max_outside, qh_DISToutside);
++      FORALLfacet_(qh->facet_list) {
++        if (facet->visible) continue;
++        printf("  %sf%d verts[", facet->upperdelaunay?"U":"", facet->id);
++        FOREACHvertex_(facet->vertices) printf("%d,", qh_pointid(qh, vertex->point));
++        printf("] outside[");
++        FOREACHpoint_(facet->outsideset) printf("%d,", qh_pointid(qh, point));
++        printf("] fd=%.6g", facet->furthestdist);
++        if (!facet->simplicial) {
++          facetT *neighbor, **neighborp;
++          printf(" nbrs[");
++          FOREACHneighbor_(facet) printf("f%d,", getid_(neighbor));
++          printf("] top%d", facet->toporient);
++        }
++        printf("\n");
++      }
++      facet= savefacet;
++    }
+     qh->num_outside--;  /* if ONLYmax, furthest may not be outside */
+     if (qh->STOPadd>0 && (qh->num_vertices - qh->hull_dim - 1 >= qh->STOPadd - 1)) {
+       trace1((qh, qh->ferr, 1059, "qh_buildhull: stop after adding %d vertices\n", qh->STOPadd-1));
+--- a/src/libqhull_r/merge_r.c
++++ b/src/libqhull_r/merge_r.c
+@@ -264,6 +264,14 @@
+         }
+         trace3((qh, qh->ferr, 3047, "qh_all_merges: merge f%d and f%d type %d dist %2.2g angle %4.4g\n",
+           facet1->id, facet2->id, mergetype, distance, angle));
++        if (getenv("QHATTACH")) {
++          vertexT *vertex, **vertexp;
++          printf("  ALLMERGE type=%d dist=%.17g f1[", mergetype, distance);
++          FOREACHvertex_(facet1->vertices) printf("%d,", qh_pointid(qh, vertex->point));
++          printf("] f2[");
++          FOREACHvertex_(facet2->vertices) printf("%d,", qh_pointid(qh, vertex->point));
++          printf("]\n");
++        }
+         if (mergetype == MRGtwisted)
+           qh_merge_twisted(qh, facet1, facet2);
+         else
+@@ -2079,6 +2087,12 @@
+ 
+   if (!facet->simplicial)
+     return;
++  if (getenv("QHATTACH")) {
++    vertexT *vertex, **vertexp;
++    printf("  MAKERIDGES f%d verts[", facet->id);
++    FOREACHvertex_(facet->vertices) printf("%d,", qh_pointid(qh, vertex->point));
++    printf("]\n");
++  }
+   trace4((qh, qh->ferr, 4027, "qh_makeridges: make ridges for f%d\n", facet->id));
+   facet->simplicial= False;
+   FOREACHneighbor_(facet) {
+@@ -3371,6 +3385,15 @@
+     mergename= mergetypes[mergetype];
+   else
+     mergename= mergetypes[MRGnone];
++  if (getenv("QHATTACH")) {
++    vertexT *vtx2, **vtx2p;
++    printf("  MERGEFACET type=%d(%s) f1[", mergetype, mergename);
++    {vertexT *vertex, **vertexp; FOREACHvertex_(facet1->vertices) printf("%d,", qh_pointid(qh, vertex->point));}
++    printf("] -> f2[");
++    {vertexT *vertex, **vertexp; FOREACHvertex_(facet2->vertices) printf("%d,", qh_pointid(qh, vertex->point));}
++    printf("]\n");
++    (void)vtx2; (void)vtx2p;
++  }
+   if (facet1->tricoplanar || facet2->tricoplanar) {
+     if (!qh->TRInormals) {
+       qh_fprintf(qh, qh->ferr, 6226, "qhull internal error (qh_mergefacet): merge f%d into f%d for mergetype %d (%s) does not work for tricoplanar facets.  Use option 'Q11'\n",
+--- a/src/libqhull_r/poly2_r.c
++++ b/src/libqhull_r/poly2_r.c
+@@ -2511,9 +2511,18 @@
+     if (!qh->NEWtentative) {
+       if (newfacet2)  /* newfacet is null if all ridges defined */
+         newfacet= newfacet2;
+-      if (newfacet)
++      if (newfacet) {
+         visible->f.replace= newfacet;
+-      else
++        if (getenv("QHATTACH")) {
++          vertexT *vertex, **vertexp;
++          printf("REPL vis[");
++          FOREACHvertex_(visible->vertices) printf("%d,", qh_pointid(qh, vertex->point));
++          printf("] <- nf[");
++          FOREACHvertex_(newfacet->vertices) printf("%d,", qh_pointid(qh, vertex->point));
++          printf("] simp%d hasridges=%d nf2set=%d\n", visible->simplicial,
++                 visible->ridges != NULL, newfacet2 != NULL);
++        }
++      } else
+         zinc_(Zinsidevisible);
+       if (visible->ridges)      /* ridges and neighbors are no longer valid for visible facet */
+         SETfirst_(visible->ridges)= NULL;
+--- a/src/libqhull_r/poly_r.c
++++ b/src/libqhull_r/poly_r.c
+@@ -174,6 +174,14 @@
+         }
+       }
+       if (visible) {
++        if (getenv("QHATTACH")) {
++          vertexT *vertex, **vertexp;
++          printf("ATTACH replace vis[");
++          FOREACHvertex_(visible->vertices) printf("%d,", qh_pointid(qh, vertex->point));
++          printf("] <- nf[");
++          FOREACHvertex_(newfacet->vertices) printf("%d,", qh_pointid(qh, vertex->point));
++          printf("] (horizon f%d simp)\n", horizon->id);
++        }
+         visible->f.replace= newfacet;
+         qh_setreplace(qh, horizon->neighbors, visible, newfacet);
+       }else {
+@@ -184,6 +192,14 @@
+     }else { /* non-simplicial, with a ridge for newfacet */
+       FOREACHneighbor_(horizon) {    /* may hold for many new facets */
+         if (neighbor->visible) {
++          if (getenv("QHATTACH")) {
++            vertexT *vertex, **vertexp;
++            printf("ATTACHns replace vis[");
++            FOREACHvertex_(neighbor->vertices) printf("%d,", qh_pointid(qh, vertex->point));
++            printf("] <- nf[");
++            FOREACHvertex_(newfacet->vertices) printf("%d,", qh_pointid(qh, vertex->point));
++            printf("] (horizon f%d nonsimp)\n", horizon->id);
++          }
+           neighbor->f.replace= newfacet;
+           qh_setdelnth(qh, horizon->neighbors, SETindex_(horizon->neighbors, neighbor));
+           neighborp--; /* repeat */
+@@ -629,6 +645,12 @@
+   FOREACHridge_(visible->ridges) {
+     ridgeid= ridge->id;
+     neighbor= otherfacet_(ridge, visible);
++    if (getenv("QHATTACH")) {
++      vertexT *vertex, **vertexp;
++      printf("    NSRIDGE vis-id=f%d edge[", visible->id);
++      FOREACHvertex_(ridge->vertices) printf("%d,", qh_pointid(qh, vertex->point));
++      printf("] nbr=f%d nbrVis=%d\n", neighbor->id, neighbor->visible);
++    }
+     if (neighbor->visible) {
+       if (!qh->NEWtentative) {
+         if (neighbor->visitid == qh->visit_id) {
+@@ -740,6 +762,14 @@
+         toporient= (horizonskip & 0x1) ^ 0x1;
+       newfacet= qh_makenewfacet(qh, vertices, toporient, neighbor);
+       (*numnew)++;
++      if (getenv("QHATTACH")) {
++        vertexT *vertex, **vertexp, *vv, **vvp;
++        printf("  CONE from vis[");
++        FOREACHvertex_(visible->vertices) printf("%d,", qh_pointid(qh, vertex->point));
++        printf("] -> nf[");
++        FOREACHsetelement_(vertexT, vertices, vv) printf("%d,", qh_pointid(qh, vv->point));
++        printf("] horizon f%d cophz%d\n", neighbor->id, neighbor->coplanarhorizon);
++      }
+       if (neighbor->coplanarhorizon && (qh->PREmerge || qh->MERGEexact)) {
+ #ifndef qh_NOmerge
+         newfacet->f.samecycle= newfacet;

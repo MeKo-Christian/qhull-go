@@ -58,16 +58,16 @@ check-tidy:
 # All CI checks
 ci: check-formatted vet test lint check-tidy
 
-# Build the Qhull ground-truth oracle tools from the local (gitignored)
-# third_party/ source. Requires the Qhull 8.0.2 source under
-# third_party/qhull-8.0.2/ — see THIRD_PARTY.md / PLAN.md. Used only to
-# regenerate the committed testdata/ fixtures; not needed to build or test.
+# Build the Qhull ground-truth oracle tools (oracle/*.c) against the local
+# (gitignored) Qhull 8.0.2 source under third_party/qhull-8.0.2/. Run the one-time
+# setup in oracle/README.md first (download + verify + apply instrumentation.patch).
+# Used only to regenerate the committed testdata/ fixtures; not needed to build/test.
 oracle-build:
-    @test -d third_party/qhull-8.0.2/src/libqhull_r || { echo "third_party/qhull-8.0.2 not present; see THIRD_PARTY.md"; exit 1; }
+    @test -d third_party/qhull-8.0.2/src/libqhull_r || { echo "third_party/qhull-8.0.2 not present; see oracle/README.md (Setup)"; exit 1; }
     mkdir -p bin
     for tool in introspect dump_state stepdump; do \
         cc -O2 -I third_party/qhull-8.0.2/src \
-            third_party/qhull-8.0.2/$tool.c \
+            oracle/$tool.c \
             third_party/qhull-8.0.2/src/libqhull_r/*.c \
             -lm -o bin/$tool; \
     done

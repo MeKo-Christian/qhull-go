@@ -15,12 +15,13 @@ fixtures in `testdata/` (creation order and per-step merge trace).
 
 That Qhull source is **not vendored or redistributed in this repository** — the
 `third_party/` directory is gitignored. To regenerate fixtures, obtain Qhull
-8.0.2 separately from <http://www.qhull.org> and place it under
-`third_party/qhull-8.0.2/`; see `PLAN.md` for the expected layout, the
-instrumentation harnesses (`introspect.c`, `dump_state.c`, `stepdump.c`,
-`order.py`), and the build recipe. Qhull retains its own license (a permissive
-license from C.B. Barber and The Geometry Center) — consult the `COPYING.txt`
-shipped with the Qhull source you download.
+8.0.2 separately and place it under `third_party/qhull-8.0.2/`; the exact pinned
+tarball (URL + sha256), the one-time setup, our own instrumentation harnesses
+(`oracle/introspect.c`, `oracle/dump_state.c`, `oracle/stepdump.c`), and the
+trace-`printf` patch (`oracle/instrumentation.patch`) are all documented in
+[`oracle/README.md`](oracle/README.md). Qhull retains its own license (a
+permissive license from C.B. Barber and The Geometry Center) — consult the
+`COPYING.txt` shipped with the Qhull source you download.
 
 Because the Qhull source is not part of this repository, running `go build`,
 `go test`, and `go get` against qhull-go never touches it.

@@ -8,12 +8,11 @@ order. This script pipes every case from corpus.json through the `introspect` to
 (built from the vendored qhull 8.0.2 source) and records, per case, the real input
 point ids in ascending vertex->id order (the Qz infinity point is dropped).
 
-Build the tool first (gitignored):
-    cc -O2 -I third_party/qhull-8.0.2/src third_party/qhull-8.0.2/introspect.c \
-       third_party/qhull-8.0.2/src/libqhull_r/*.c -lm -o /tmp/introspect
+Build the tool first (see oracle/README.md for the one-time Qhull setup):
+    just oracle-build           # -> bin/introspect (and dump_state, stepdump)
 
 Run (writes creation_order.json next to this file):
-    QHULL_INTROSPECT=/tmp/introspect python3 gen_creation_order.py
+    QHULL_INTROSPECT=bin/introspect python3 testdata/gen_creation_order.py
 """
 import json
 import os

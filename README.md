@@ -51,10 +51,11 @@ Parity is validated against Qhull's actual output, captured as fixtures in
 building and testing this package needs nothing beyond the Go toolchain.
 
 Regenerating the fixtures requires the Qhull 8.0.2 source plus the small
-instrumentation tools (`introspect.c`, `dump_state.c`, `stepdump.c`). That source
-is **not redistributed here** — it is a local, gitignored dev dependency under
-`third_party/qhull-8.0.2/`. Obtain Qhull from <http://www.qhull.org>; see
-`THIRD_PARTY.md` and `PLAN.md` for the layout and build recipe.
+instrumentation tools (`oracle/introspect.c`, `oracle/dump_state.c`,
+`oracle/stepdump.c`) and our trace patch (`oracle/instrumentation.patch`). The
+Qhull source itself is **not redistributed here** — it is a local, gitignored dev
+dependency under `third_party/qhull-8.0.2/`. The pinned tarball, one-time setup,
+and build/regeneration recipe are in [`oracle/README.md`](oracle/README.md).
 
 ## License
 
