@@ -37,7 +37,7 @@ func delaunayFromOrder(x, y []float64, order []int) (triangles, neighbors [][3]i
 		return nil, nil, err
 	}
 
-	base, baseNbrs, err := Delaunay(x, y)
+	base, baseNbrs, err := DelaunayFast(x, y)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -58,10 +58,11 @@ func fanCells(x, y []float64, base [][3]int, cells [][]int, rank []int) [][3]int
 	return out
 }
 
-// DelaunayMatched returns the Delaunay triangulation with matplotlib/Qhull's
-// cocircular diagonal choice resolved from the computed vertex creation order
-// (buildHullOrderRidge + the per-cell fan). It is layered on the robust exact-predicate
-// Delaunay and degrades gracefully:
+// Delaunay returns the Delaunay triangulation of the points (x, y) with
+// matplotlib/Qhull's cocircular diagonal choice resolved from the computed vertex
+// creation order (buildHullOrderRidge + the per-cell fan). This is the default,
+// parity-matching entry point. It is layered on the robust exact-predicate
+// baseline ([DelaunayFast]) and degrades gracefully:
 //
 //   - General-position inputs have no cocircular cells, so the exact triangulation
 //     is already canonical and is returned directly (the order computation, which
@@ -71,10 +72,12 @@ func fanCells(x, y []float64, base [][3]int, cells [][]int, rank []int) [][3]int
 //   - If the order computation bails (an unported hull degeneracy), the exact
 //     triangulation — itself a valid Delaunay triangulation — is returned.
 //
-// Triangles are wound anticlockwise and returned in deterministic order, with the
-// same neighbour conventions as Delaunay.
-func DelaunayMatched(x, y []float64) (triangles, neighbors [][3]int, err error) {
-	base, baseNbrs, err := Delaunay(x, y)
+// Triangles (anticlockwise vertex indices) are returned in deterministic order;
+// neighbors[i][j] is the triangle across the edge from vertex j to (j+1)%3, or -1
+// on the convex-hull boundary. For a faster construction that does not match
+// Qhull's cocircular diagonal, use [DelaunayFast].
+func Delaunay(x, y []float64) (triangles, neighbors [][3]int, err error) {
+	base, baseNbrs, err := DelaunayFast(x, y)
 	if err != nil {
 		return nil, nil, err
 	}

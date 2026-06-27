@@ -124,13 +124,14 @@ func sameNeighborGraph(aTris, aNbrs, bTris, bNbrs [][3]int) bool {
 // construction order and qh_triangulate_facet fan are ported.
 const cocircularRatchet = 6
 
-// TestDelaunayConnectivityVsQhull is the primary differential gate: for every
-// corpus case the Go engine must reproduce Qhull's triangle set and neighbor
-// graph (compared as sets/graphs, independent of Qhull's internal array order
-// and per-row vertex rotation). General-position inputs have a unique Delaunay,
-// so they are a hard gate (all must match). Cocircular inputs are non-unique;
-// matching Qhull's specific diagonal needs the construction-order-dependent fan,
-// gated by a ratchet until the hull port lands.
+// TestDelaunayConnectivityVsQhull is the differential gate for the exact-predicate
+// baseline (DelaunayFast): for every corpus case it must reproduce Qhull's
+// triangle set and neighbor graph (compared as sets/graphs, independent of Qhull's
+// internal array order and per-row vertex rotation). General-position inputs have
+// a unique Delaunay, so they are a hard gate (all must match). Cocircular inputs
+// are non-unique, and the baseline does not match Qhull's specific diagonal — that
+// is the job of the default Delaunay (gated by TestDelaunayComputed); here the
+// baseline is held to a low ratchet only to catch regressions.
 func TestDelaunayConnectivityVsQhull(t *testing.T) {
 	c := loadCorpus(t)
 	type stat struct {
@@ -147,7 +148,7 @@ func TestDelaunayConnectivityVsQhull(t *testing.T) {
 		}
 		st.total++
 
-		gotTris, gotNbrs, err := Delaunay(tc.X, tc.Y)
+		gotTris, gotNbrs, err := DelaunayFast(tc.X, tc.Y)
 		ok := err == nil &&
 			len(gotTris) == len(tc.Triangles) &&
 			sameTriangleSet(gotTris, tc.Triangles) &&

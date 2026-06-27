@@ -19,13 +19,15 @@ No cgo. No external dependencies — standard library only.
 ```go
 import qhull "github.com/MeKo-Tech/qhull-go"
 
-// Robust exact-predicate Delaunay. Unique/canonical for general position;
-// the diagonal on cocircular cells is whatever the baseline construction yields.
+// Default: matplotlib/Qhull-matched connectivity, with the cocircular diagonal
+// resolved from the computed vertex creation order. This is what you want for
+// parity. Falls back to the exact baseline if the order computation ever bails.
 tris, neighbors, err := qhull.Delaunay(x, y)
 
-// Same, but with Qhull's cocircular diagonal choice resolved from the computed
-// vertex creation order. Falls back to Delaunay() if the order computation bails.
-tris, neighbors, err := qhull.DelaunayMatched(x, y)
+// Robust exact-predicate baseline. Identical to Delaunay for general position;
+// on cocircular cells it returns a valid but arbitrary diagonal (no Qhull
+// matching) and is cheaper on cocircular-heavy inputs.
+tris, neighbors, err := qhull.DelaunayFast(x, y)
 ```
 
 Both return `triangles [][3]int` (anticlockwise vertex indices) and `neighbors

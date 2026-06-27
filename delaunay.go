@@ -14,11 +14,19 @@ import (
 	"sort"
 )
 
-// Delaunay returns the Delaunay triangulation of the points (x, y) as a list of
-// triangles (anticlockwise vertex indices) and, for each triangle, its three
+// DelaunayFast returns the Delaunay triangulation of the points (x, y) as a list
+// of triangles (anticlockwise vertex indices) and, for each triangle, its three
 // neighbours. neighbors[i][j] is the triangle adjacent across the edge from
 // vertex j to vertex (j+1)%3, or -1 on the convex hull boundary.
-func Delaunay(x, y []float64) (triangles, neighbors [][3]int, err error) {
+//
+// This is the robust exact-predicate baseline construction. It does NOT reproduce
+// Qhull's cocircular diagonal choice: on inputs with ≥4 points on a common empty
+// circle it returns a valid — but arbitrary — diagonal, skipping the
+// creation-order computation that [Delaunay] performs. For general-position
+// inputs (no cocircular cells) it is identical to [Delaunay]; on cocircular-heavy
+// inputs it is cheaper. Use it when you need a Delaunay triangulation but do not
+// care about matplotlib/Qhull connectivity parity.
+func DelaunayFast(x, y []float64) (triangles, neighbors [][3]int, err error) {
 	if len(x) != len(y) {
 		return nil, nil, fmt.Errorf("qhull: x and y length mismatch (%d vs %d)", len(x), len(y))
 	}

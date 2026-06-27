@@ -28,9 +28,10 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done.
 ## 1. Repo / publishing setup
 
 - [ ] **Create the GitHub repo** `MeKo-Tech/qhull-go` and push the initial commit.
-- [ ] **Add a `LICENSE`** for the Go code (MIT or BSD-3 — confirm preference).
-      Keep `third_party/qhull-8.0.2/COPYING.txt` for the vendored Qhull source and
-      add a short `NOTICE`/`THIRD_PARTY.md` clarifying the split.
+- [x] **Add a `LICENSE`** — MIT, for the Go code. The vendored Qhull source under
+      `third_party/qhull-8.0.2/` keeps its own license (`COPYING.txt`).
+- [ ] Optionally add a short `NOTICE`/`THIRD_PARTY.md` spelling out the license
+      split (MIT Go code vs. Qhull-licensed vendored C source).
 - [ ] **Confirm the module path.** `github.com/MeKo-Tech/qhull-go` assumed; the
       package name stays `qhull` (consumers import the repo path, refer to it as
       `qhull`). Adjust go.mod + README if a different org/name is chosen.
@@ -43,15 +44,16 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done.
 
 The current exported surface is intentionally minimal:
 
-- `Delaunay(x, y []float64) (triangles, neighbors [][3]int, err error)`
-- `DelaunayMatched(x, y []float64) (triangles, neighbors [][3]int, err error)`
+- `Delaunay(x, y []float64) (triangles, neighbors [][3]int, err error)` — the
+  default, Qhull/matplotlib-matched path.
+- `DelaunayFast(x, y []float64) (triangles, neighbors [][3]int, err error)` — the
+  robust exact-predicate baseline (no cocircular diagonal matching).
 
 Before tagging `v0.1.0`:
 
-- [ ] **Decide the public naming.** Is `DelaunayMatched` the right name, or should
-      the Qhull-faithful path be the default `Delaunay` and the raw one be
-      `DelaunayFast`/`DelaunayExact`? (In matplotlib-go the *matched* variant is
-      what callers want.)
+- [x] **Public naming decided.** The Qhull-faithful path is the default `Delaunay`;
+      the raw exact-predicate baseline is `DelaunayFast`. (In matplotlib-go the
+      matched variant is what callers want, so it is the default.)
 - [ ] **Add `doc.go`** with a package overview + runnable example.
 - [ ] Consider a small result type (`type Triangulation struct{ Triangles, Neighbors [][3]int }`)
       vs. the current multi-return — multi-return matches the matplotlib-go call
@@ -147,5 +149,5 @@ Once §1–§5 are stable and a version is tagged:
 - Parity is validated downstream by matplotlib-go's golden/reference suite, **not**
   by this repo's unit tests alone. Don't change Delaunay connectivity casually.
 - Goldens (downstream) are regenerated against matplotlib, never hand-edited.
-- The exact-predicate `Delaunay` is the cgo-free, always-correct fallback;
-  `DelaunayMatched` only refines the cocircular diagonal on top of it.
+- The exact-predicate `DelaunayFast` is the cgo-free, always-correct fallback; the
+  default `Delaunay` only refines the cocircular diagonal on top of it.
