@@ -17,7 +17,7 @@ No cgo. No external dependencies — standard library only.
 ## API
 
 ```go
-import qhull "github.com/MeKo-Tech/qhull-go"
+import qhull "github.com/MeKo-Christian/qhull-go"
 
 // Default: matplotlib/Qhull-matched connectivity, with the cocircular diagonal
 // resolved from the computed vertex creation order. This is what you want for
@@ -51,6 +51,6 @@ build recipe and vendoring plan.
 
 ## License
 
-The Go code is MIT-licensed (see `LICENSE`, to be added). The vendored Qhull
-source under `third_party/qhull-8.0.2/` retains its original Qhull license
-(`third_party/qhull-8.0.2/COPYING.txt`).
+The Go code is MIT-licensed (see `LICENSE`). The vendored Qhull source under
+`third_party/qhull-8.0.2/` retains its original Qhull license
+(`third_party/qhull-8.0.2/COPYING.txt`). See `THIRD_PARTY.md` for the full split.

@@ -19,7 +19,7 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done.
 - [x] Copy the ground-truth oracle to `third_party/qhull-8.0.2/` (patched Qhull
       source + `introspect.c` / `dump_state.c` / `stepdump.c` / `order.py`),
       minus compiled binaries.
-- [x] `go.mod` → `module github.com/MeKo-Tech/qhull-go`, `go 1.25.0`.
+- [x] `go.mod` → `module github.com/MeKo-Christian/qhull-go`, `go 1.25.0`.
 - [x] `.gitignore`, `README.md`, this `PLAN.md`.
 - [x] Verify standalone: `go build ./...`, `go vet ./...`, `go test ./...` all green.
 
@@ -27,18 +27,17 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done.
 
 ## 1. Repo / publishing setup
 
-- [ ] **Create the GitHub repo** `MeKo-Tech/qhull-go` and push the initial commit.
+- [x] **Create the GitHub repo** `MeKo-Christian/qhull-go` and push the initial commit.
 - [x] **Add a `LICENSE`** — MIT, for the Go code. The vendored Qhull source under
       `third_party/qhull-8.0.2/` keeps its own license (`COPYING.txt`).
-- [ ] Optionally add a short `NOTICE`/`THIRD_PARTY.md` spelling out the license
-      split (MIT Go code vs. Qhull-licensed vendored C source).
-- [ ] **Confirm the module path.** `github.com/MeKo-Tech/qhull-go` assumed; the
-      package name stays `qhull` (consumers import the repo path, refer to it as
-      `qhull`). Adjust go.mod + README if a different org/name is chosen.
-- [ ] Decide whether the vendored Qhull `src/` tree is committed wholesale (current
-      approach — preserves the instrumentation patches) or replaced by a
-      submodule/wrap-file + patch set (see §4). This affects what the first commit
-      contains.
+- [x] Add a short `THIRD_PARTY.md` spelling out the license split (MIT Go code vs.
+      Qhull-licensed vendored C source, incl. the added instrumentation harnesses).
+- [x] **Confirm the module path.** `github.com/MeKo-Christian/qhull-go` (the package
+      name stays `qhull`; consumers import the repo path and refer to it as `qhull`).
+      `go.mod` + README + LICENSE copyright updated to match.
+- [x] **Vendoring decision:** the Qhull `src/` tree stays committed wholesale (it
+      preserves the instrumentation patches). A submodule/wrap-file + patch set is
+      deferred to §4.
 
 ## 2. Public API design & freeze
 
@@ -130,7 +129,7 @@ The oracle is the real test harness — it captures Qhull's creation order
 
 Once §1–§5 are stable and a version is tagged:
 
-- [ ] Add `require github.com/MeKo-Tech/qhull-go vX.Y.Z` to matplotlib-go's
+- [ ] Add `require github.com/MeKo-Christian/qhull-go vX.Y.Z` to matplotlib-go's
       `go.mod` (use a `replace => ../qhull-go` during local development).
 - [ ] Repoint the two consumers — `tri/delaunay.go` and `tri/triangulation.go` —
       from the in-tree `tri/qhull` to the external module.
