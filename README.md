@@ -41,9 +41,8 @@ to `(j+1)%3`, or `-1` on the convex-hull boundary.
 ## Status
 
 - **General position:** 27/27 corpus cases match Qhull's connectivity exactly.
-- **Cocircular:** 33/34 corpus cases match Qhull's exact build order / diagonal
-  (60/61 across the combined order lock). One case (`grid5x4`) is a graceful,
-  still-valid-Delaunay fallback — see `PLAN.md`.
+- **Cocircular:** 34/34 corpus cases match Qhull's exact build order / diagonal
+  (61/61 across the combined order lock).
 
 ## Ground-truth oracle
 

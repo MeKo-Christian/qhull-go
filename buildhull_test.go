@@ -8,11 +8,11 @@ import "testing"
 // ridge-graph engine (buildHullOrderRidge): Qhull's own facet layout (inverse-id
 // vertex set + parallel neighbour array) with the faithful coplanarhorizon merge
 // (newfacet2 leak + per-merge qh_makeridges propagation + qh_mergesimplex
-// swap-remove + pre-existing-ridge ordering) closes 33/34. The remaining 1
-// (grid5x4) diverges only in the intermediate ridge order of one merged quad
-// between its creation and the Qz infinity-point processing — a deep, cosmetic-only
-// fidelity layer (PLAN.md Phase 12, Stage 3c.6f). Bump as cases close; never lower.
-const computedCocircularRatchet = 33
+// swap-remove + pre-existing-ridge ordering) plus the qh_findbestnew partition
+// switch on merge steps (a non-simplicial new facet makes qh_partitionvisible scan
+// the new-facet list linearly instead of the directed qh_findbest walk) closes
+// 34/34. Bump as cases close; never lower.
+const computedCocircularRatchet = 34
 
 // TestDelaunayComputed exercises delaunayComputed end-to-end against the
 // differential corpus. General position has a unique Delaunay, so it is a hard

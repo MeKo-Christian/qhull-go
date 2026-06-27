@@ -11,20 +11,6 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done.
 
 ---
 
-## 0. Extraction (done in this pass)
-
-- [x] Create repo at `../qhull-go`, `git init`.
-- [x] Copy all `tri/qhull/*.go` to the module root (package `qhull`).
-- [x] Copy `testdata/` (corpus.json, creation_order.json, gen_*.py).
-- [x] Keep the ground-truth oracle at `third_party/qhull-8.0.2/` (patched Qhull
-      source + `introspect.c` / `dump_state.c` / `stepdump.c` / `order.py`) as a
-      **local, gitignored** dev dependency — not redistributed in this repo.
-- [x] `go.mod` → `module github.com/MeKo-Christian/qhull-go`, `go 1.25.0`.
-- [x] `.gitignore`, `README.md`, this `PLAN.md`.
-- [x] Verify standalone: `go build ./...`, `go vet ./...`, `go test ./...` all green.
-
----
-
 ## 1. Repo / publishing setup
 
 - [x] **Create the GitHub repo** `MeKo-Christian/qhull-go` and push the initial commit.
@@ -68,30 +54,35 @@ Before tagging `v0.1.0`:
 - [x] **API audit / `go doc` review done.** Exported surface is exactly
       `Delaunay` + `DelaunayFast`; `go doc`, `go vet`, `gofmt`, and the full test
       suite (incl. the example) are green.
-- [ ] **Freeze + tag `v0.1.0`.** Deferred: Go's module proxy caches tags
-      immutably, so hold the tag until §3 (grid5x4) and §5 (CI) are settled or
-      until a v0.1.0 release is explicitly wanted. The API itself is frozen.
+- [ ] **Freeze + tag `v0.1.0`.** Deferred until a v0.1.0 release is explicitly
+      wanted (Go's module proxy caches tags immutably). §3 (grid5x4) and §5 (CI)
+      are now both settled, so the only thing holding the tag is the go-ahead. The
+      API itself is frozen.
 
-## 3. Finish the algorithm — grid5x4 (the 60/61 holdout)
+## 3. Finish the algorithm — grid5x4 (the 60/61 holdout) — DONE
 
 Carried over from matplotlib-go Phase 12, task "3c.6f". The faithful ridge engine
-(`buildHullOrderRidge`) reaches **33/34 cocircular** exact build-order; the lone
-holdout is `grid5x4`.
+(`buildHullOrderRidge`) now reaches **34/34 cocircular** exact build-order (61/61
+across the combined order lock). `grid5x4` is closed.
 
-- [ ] **Close grid5x4 → 34/34.** Root cause (re-diagnosed via the QHATTACH oracle,
-      *not* the earlier "cross-addPoint coplanarity" theory): the merged quad
-      `f1=[19,15,4,0]`'s last two ridges (`[19,4]`, `[19,15]`) get swapped between
-      the merge and the Qz-infinity-point visibility step, flipping which cone
-      seeds the directed-partition replacement walk. Closing it requires faithful
-      **non-simplicial ridge-order tracking across `addPoint`s** (intermediate
-      swap-remove / re-append, plus `qh_facetintersect` cone vertex order).
-      Deep, fragile, and **cosmetic only** — Qhull's cocircular diagonal is
-      arbitrary, so the fallback is already a valid Delaunay triangulation. Was
-      explicitly deferred; tackle here only if 34/34 is wanted for the library's
-      own correctness story.
-- [ ] When closed: raise the ratchets in `order_oracle_test.go`
-      (`cocircularRidgeRatchet`) and `buildhull_test.go`
-      (`computedCocircularRatchet`) to 34, and drop the holdout notes from README.
+- [x] **Close grid5x4 → 34/34.** Root cause (pinned with the QHSTEP/QHATTACH oracle
+      on the real merging build — the earlier `stepdump`/`TA` runs were misleading
+      because `TAn` suppresses merging): the divergence was **not** a ridge-order or
+      replacement-choice bug. The replacement of the visible facet `[7,15,0]` is the
+      cone `[5,15,0]` in both engines. The gap was the **partition search itself**.
+      `qh_addpoint` (libqhull_r.c:246-258) switches `qh_partitionvisible` from the
+      directed `qh_findbest` walk to the linear-scan `qh_findbestnew` the moment
+      premerge produces a non-simplicial new facet. On the apex-`5` merge step,
+      coplanar point `6` is outside both the cone triangle `[5,7,15]` (dist ~0.25)
+      and the merged quad `[5,2,7,0]` (dist ~0.23); the directed walk reached the
+      quad first and returned it, whereas `qh_findbestnew` scans the new-facet list
+      in order and the merged-horizon quad is appended at the tail, so the cone is
+      hit first. Fix: `findBestNew` (faithful `qh_findbestnew` port) + a `findbestnew`
+      flag set in `partitionVisible` when any new facet is non-simplicial. No change
+      to general position (27/27) or the other 33 cocircular cases.
+- [x] Raised the ratchets in `order_oracle_test.go` (`cocircularRidgeRatchet`) and
+      `buildhull_test.go` (`computedCocircularRatchet`) to 34, and dropped the
+      holdout notes from the README.
 
 ## 4. Ground-truth oracle: vendoring & build recipe
 
@@ -99,7 +90,7 @@ The oracle is the real test harness — it captures Qhull's creation order
 (`introspect`), projected state (`dump_state`), and per-step merge trace
 (`stepdump`, gated on `QHATTACH`/`QHSTEP`) as fixtures.
 
-- [ ] **Add a build target** (`Makefile` or `justfile`) for the tools, e.g.
+- [ ] **Add a build target** (`justfile`) for the tools, e.g.
       `cc -O2 -I third_party/qhull-8.0.2/src third_party/qhull-8.0.2/introspect.c \
       third_party/qhull-8.0.2/src/libqhull_r/*.c -lm -o bin/introspect`
       (and likewise `dump_state`, `stepdump`). Mirror the recipe documented in

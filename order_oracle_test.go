@@ -44,9 +44,10 @@ func TestComputedOrderRidge(t *testing.T) {
 	}
 	// Cocircular ratchet: the faithful coplanar-horizon merge (newfacet2 leak +
 	// per-merge qh_makeridges propagation + qh_mergesimplex swap-remove + pre-existing
-	// ridge ordering) reaches 33/34 exact-order; the last 1 (grid5x4) needs
-	// cross-addPoint merge-history fidelity (Stage 3c.6e). Never lower.
-	const cocircularRidgeRatchet = 33
+	// ridge ordering) plus the qh_findbestnew partition switch on merge steps
+	// (qh_addpoint uses the linear new-facet scan, not the directed walk, once a merge
+	// produces a non-simplicial facet) reaches 34/34 exact-order. Never lower.
+	const cocircularRidgeRatchet = 34
 	if st := byCat["cocircular"]; st != nil && st.pass < cocircularRidgeRatchet {
 		t.Errorf("ridge cocircular exact-order regressed below ratchet: %d/%d < %d",
 			st.pass, st.total, cocircularRidgeRatchet)

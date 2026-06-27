@@ -84,6 +84,7 @@ type rhull struct {
 	maxOutside  float64 // qh.max_outside (running, for qh_DISToutside)
 	visit       int
 	ok          bool
+	findbestnew bool // qh.findbestnew: linear-scan partition after a merge step
 
 	replace   map[int]int // visible facet id → its replacement new facet id
 	newListID int         // qh.newfacet_list head (current addPoint's first new facet)
@@ -102,10 +103,10 @@ func buildHullOrderRidge(q *qstate) ([]int, bool) {
 	// The coplanar-horizon merge (linkSamecycle/premerge/mergeInto + explicit
 	// redge/rnbr/rtop ridge lists, non-simplicial-horizon geometric orientation, and
 	// a full-scan fallback for the post-merge directed search) is on by default and
-	// strictly better than the simplicial-only build (33/34 vs 24/34 cocircular
+	// strictly better than the simplicial-only build (34/34 vs 24/34 cocircular
 	// exact-order; general stays 27/27). The replacement model is a FAITHFUL port
 	// (verified against a QHATTACH oracle in third_party/qhull-8.0.2, gitignored,
-	// dumping every REPL/CONE/MAKERIDGES/MERGEFACET/NSRIDGE), not a heuristic. Four
+	// dumping every REPL/CONE/MAKERIDGES/MERGEFACET/NSRIDGE), not a heuristic. Five
 	// pieces:
 	//  1. qh_makenewfacets' newfacet2 LEAK (poly2_r.c:2490-2515): newfacet/newfacet2
 	//     reset only at function entry, not per visible facet, so a ridgeless facet
@@ -120,15 +121,14 @@ func buildHullOrderRidge(q *qstate) ([]int, bool) {
 	//  4. qh_makeridges lists a facet's PRE-EXISTING materialised ridges FIRST
 	//     (merge_r.c:2090-2091, only missing boundary ridges appended) — see makeRidges
 	//     honouring matRidge order.
-	// Remaining 1 (grid5x4): a cross-addPoint merge-history divergence — Qhull's
-	// horizon hf[15,4,0] pre-carries ridge [15,0] from an EARLIER addPoint's merge of
-	// the facet across [15,0] (f11), which this engine's merge history does not
-	// reproduce (its matRidge is empty at merge time), so the first cone differs. The
-	// merge ORDER within a premerge already matches qh_mergecycle_all (facet-list /
-	// cone-creation order) for single-cone samecycles; the gap is which facets merged
-	// at earlier addPoints (coplanarity-decision fidelity), a deeper layer. 33/34 beats
-	// the shipped vertex-set engine (buildhull.go, 31/34). QHULL_MERGE=0 falls back to
-	// the simplicial engine. See PLAN.md Stage 3c.6.
+	//  5. qh_findbestnew partition switch (libqhull_r.c:246-258): once premerge yields
+	//     a non-simplicial new facet, qh_addpoint repartitions the visible facets'
+	//     orphaned points with qh_findbestnew (a LINEAR new-facet-list scan) instead of
+	//     the directed qh_findbest walk — see partitionVisible's findbestnew flag and
+	//     findBestNew. This is what closed grid5x4 (34/34): a point outside both a cone
+	//     triangle and the merged quad lands on the cone (scanned first), not the quad
+	//     (appended at the tail), matching Qhull's facet-list order.
+	// QHULL_MERGE=0 falls back to the simplicial engine. See PLAN.md Stage 3c.6.
 	h.mergeEnabled = os.Getenv("QHULL_MERGE") != "0"
 	h.minVisible = 2 * q.distRound // premerge_centrum, hull_dim<=3 with merging
 	h.maxCoplanar = h.minVisible
@@ -441,11 +441,10 @@ func (h *rhull) buildLoop() bool {
 			return false
 		}
 	}
-	// The coplanar-horizon merge (qh_mergecycle) is implemented but still drops
-	// the coplanar interior points of a cocircular cell — it needs the
-	// qh_partitioncoplanar promotion layer to keep them pickable (PLAN.md Stage
-	// 3c.6). Until then a dropped point means the merge produced an invalid order,
-	// so bail and let the caller fall back to the exact triangulation.
+	// Safety net: if any real point never became a vertex (e.g. a coplanar interior
+	// point dropped by a merge step instead of being promoted), the computed order is
+	// incomplete — bail so the caller falls back to the exact triangulation rather
+	// than emit a wrong fan apex. The full corpus (61/61) places every point.
 	if len(h.order) != h.q.n {
 		return false
 	}
@@ -1035,6 +1034,59 @@ func (h *rhull) findBest(pt, startID int) (*rfacet, float64) {
 	return h.findBestHorizon(pt, best, bestDist)
 }
 
+// findBestNew mirrors qh_findbestnew (geom_r.c:446): a LINEAR scan of the new-facet
+// list rather than findBest's directed neighbour walk. qh_addpoint selects it for
+// qh_partitionvisible whenever premerge produced a non-simplicial new facet. The
+// scan starts at startfacet (the visible facet's replacement) and wraps around the
+// whole new-facet list, returning the FIRST facet that is clearly outside
+// (dist ≥ qh_DISToutside); only if none is, it keeps the furthest and broadens via
+// qh_findbesthorizon. Because premerge appends the merged-horizon (non-simplicial)
+// facets at the tail, a cone facet is scanned before the merged quad — so a point
+// that is outside both lands on the cone, matching Qhull. An upperdelaunay facet is
+// eligible only when the point is clearly outside it (dist ≥ MINoutside).
+func (h *rhull) findBestNew(pt, startID int) (*rfacet, float64) {
+	h.visit++
+	visit := h.visit
+	// qh_DISToutside with qh_USEfindbestnew false and MERGING true:
+	// max(2*MINoutside, max_outside).
+	distoutside := math.Max(2*h.minOutside, h.maxOutside)
+	bestDist := -math.MaxFloat64
+	var best *rfacet
+	earlyReturn := false
+	scan := func(fromID, untilID int) {
+		for id := fromID; id != untilID && !earlyReturn; {
+			f := h.facets[id]
+			id = f.next
+			if f.visible || f.visitid == visit {
+				continue
+			}
+			f.visitid = visit
+			d := h.distplane(pt, f)
+			if d > bestDist {
+				if !f.upper || d >= h.minOutside {
+					best = f
+					bestDist = d
+					if d >= distoutside { // clearly outside → qh_findbestnew returns now
+						earlyReturn = true
+					}
+				}
+			}
+		}
+	}
+	// pass 1: startfacet..tail; pass 2: newfacet_list..startfacet (wrap).
+	scan(startID, h.tailID)
+	if !earlyReturn {
+		scan(h.newListID, startID)
+	}
+	if earlyReturn {
+		return best, bestDist // LABELreturn_bestnew: skips qh_findbesthorizon
+	}
+	if best == nil {
+		best = h.facets[startID]
+	}
+	return h.findBestHorizon(pt, best, bestDist)
+}
+
 // findBestHorizon mirrors qh_findbesthorizon (non-checkmax, noupper): from the
 // directed search's best facet it explores the facet graph (new AND old facets),
 // moving to any neighbour strictly further from the point and exploring every
@@ -1079,12 +1131,25 @@ func (h *rhull) findBestHorizon(pt int, start *rfacet, bestDist float64) (*rface
 }
 
 // partitionVisible redistributes each visible facet's orphaned outside points onto
-// the new facets (qh_partitionvisible), starting each point's directed best search
-// from the visible facet's replacement (qh_getreplacement). qh.max_outside stays at
-// roundoff throughout these builds, so qh_findbestnew (used on merge steps) and
-// qh_findbest agree — both return the replacement when the point is clearly outside
-// it — so the only thing that distinguishes a merge step is the replacement choice.
+// the new facets (qh_partitionvisible), starting each point's best search from the
+// visible facet's replacement (qh_getreplacement). qh_addpoint switches the search
+// from the directed qh_findbest to the linear-scan qh_findbestnew whenever premerge
+// produced any non-simplicial new facet (libqhull_r.c:246-258). The two disagree on
+// a coplanar-horizon merge step: the directed walk returns the FIRST clearly-outside
+// facet its neighbour walk reaches (often the merged quad), whereas the linear scan
+// returns the first clearly-outside facet in new-facet-list order — and the merged
+// horizon quad is appended at the tail, so a cone facet is hit first. That is what
+// keeps a coplanar point (e.g. grid5x4's p6) on the cone triangle, not the quad.
 func (h *rhull) partitionVisible(visible, newFacets []*rfacet) {
+	// qh_addpoint: use qh_findbestnew if any new facet is non-simplicial (a merge
+	// happened this step); qh_USEfindbestnew (Ztotmerge>50) is false for these inputs.
+	h.findbestnew = false
+	for _, nf := range newFacets {
+		if !nf.simplicial {
+			h.findbestnew = true
+			break
+		}
+	}
 	for _, vf := range visible {
 		start, ok := h.replace[vf.id]
 		if !ok {
@@ -1115,7 +1180,13 @@ func (h *rhull) partitionVisible(visible, newFacets []*rfacet) {
 // and re-flagged new. This ordering is what defers the Qz infinity point's cone
 // (and points that land on it) past the lower-facet picks.
 func (h *rhull) partitionPointInto(p, startID int) {
-	f, dist := h.findBest(p, startID)
+	var f *rfacet
+	var dist float64
+	if h.findbestnew {
+		f, dist = h.findBestNew(p, startID)
+	} else {
+		f, dist = h.findBest(p, startID)
+	}
 	if (f == nil || dist < h.minOutside) && h.mergeEnabled {
 		// After a merge the directed walk may miss the facet a point is clearly
 		// outside of; fall back to a full scan so it is not spuriously dropped.
